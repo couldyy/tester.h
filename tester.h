@@ -69,6 +69,10 @@
 #define TESTER_BUSYLOOP_SLEEP_INTERVAL_MS 1
 #define TESTER_MICRO_TO_MILI 1000
 
+#define TESTER_IF_PROC_RUNNING(proc_ptr) (((proc_ptr)->test->_status == TESTER_TEST_STATUS_RUNNING) ||  ((proc_ptr)->test->_status == TESTER_TEST_STATUS_BUILDING))
+// TODO: also check for TESTER_TEST_STATUS_CREATED?
+#define TESTER_IF_PROC_FINISHED(proc_ptr) (((proc_ptr)->test->_status != TESTER_TEST_STATUS_RUNNING) && ((proc_ptr)->test->_status != TESTER_TEST_STATUS_BUILDING))
+#define TESTER_IF_PROC_ERROR(proc_ptr) (((proc_ptr)->test->_status != TESTER_TEST_STATUS_FINISHED_OK) && ((proc_ptr)->test->_status != TESTER_TEST_STATUS_BUILD_OK))
 
 #define TESTER_STATUSES \
     ENTRY(TEST_STATUS_CREATED = 0) \
@@ -191,6 +195,26 @@ typedef enum {
 #define Test Tester_test
 #define Proc Tester_proc
 #define Run_opt Tester_run_opt
+
+#define PIPE_READ_END TESTER_PIPE_READ_END 
+#define PIPE_WRITE_END TESTER_PIPE_WRITE_END
+
+#define UNUSED TESTER_UNUSED
+
+#define JUDGE_BY_OUTPUT TESTER_JUDGE_BY_OUTPUT
+#define JUDGE_BY_EXIT_CODE TESTER_JUDGE_BY_EXIT_CODE
+
+#define CC TESTER_CC
+
+#define TEST_BUFFSIZE TESTER_TEST_BUFFSIZE
+#define READ_BATCH_SIZE TESTER_READ_BATCH_SIZE
+
+#define CMD_VEC TESTER_CMD_VEC 
+#define BUSYLOOP_SLEEP_INTERVAL_MS TESTER_BUSYLOOP_SLEEP_INTERVAL_MS
+#define MICRO_TO_MILI TESTER_MICRO_TO_MILI
+
+#define IF_PROC_RUNNING TESTER_IF_PROC_RUNNING
+#define IF_PROC_FINISHED TESTER_IF_PROC_FINISHED
 
 #endif //TESTER_STRIP_PREFIXES
 
@@ -675,7 +699,7 @@ int tester_procs_wait_async(Tester_proc** procs, size_t n_procs, Tester_proc** r
     TESTER_ASSERT(rprocs_finished != NULL && n_rprocs_finished > 0);
     size_t total_finished = 0;
     for (size_t i = 0; i < n_procs; i++) {
-        if (procs[i]->test->_status != TESTER_TEST_STATUS_RUNNING) {
+        if (TESTER_IF_PROC_FINISHED(procs[i])) {
             total_finished++;
         }
     }
@@ -686,7 +710,7 @@ int tester_procs_wait_async(Tester_proc** procs, size_t n_procs, Tester_proc** r
     // TODO: hanle when all procs.status != TESTER_TEST_STATUS_RUNNING (will hang in that case)
     while (procs_finished <= 0) {
         for (size_t i = 0; i < n_procs; i++) {
-            if (procs[i]->test->_status == TESTER_TEST_STATUS_RUNNING) {
+            if (TESTER_IF_PROC_RUNNING(procs[i])) {
                 if (tester_proc_wait_async_and_read_pipes_async(procs[i]) > 0) {
                     if (procs_finished > n_rprocs_finished) 
                         return -1;
@@ -870,4 +894,3 @@ void tester_rebuild_yourself(int argc, char** argv, char** source_files)
 }
 
 #endif //TESTER_IMPLEMENTATION
-

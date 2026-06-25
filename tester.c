@@ -6,7 +6,7 @@ Test tests[] =  {
 {
     .name = "./test",
     .cmd = TESTER_CMD_VEC("./test", "7"),
-    .build_cmd = TESTER_CMD_VEC(TESTER_CC, "-o", "test", "test.c"), // if put later, tester will run outdated version of compiled test
+    .build_cmd = CMD_VEC(TESTER_CC, "-o", "test", "test.c"), // if put later, tester will run outdated version of compiled test
     .judge_by = TESTER_JUDGE_BY_OUTPUT,
     .expected_exit_code = 0,
     .expected_output = "Sleeping 7s ... done\n",
