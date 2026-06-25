@@ -605,7 +605,23 @@ ssize_t tester_pipe_read_to_buff(int pipe_fd, Tester_buff* buff)
 int tester_proc_wait_async_and_read_pipes_async(Tester_proc* proc)
 {
     int wstatus;
-    // TODO: what if proc is already finished but we try to read from its pipe?
+
+    int return_value;
+    // check if proc have finished
+    int wait_result = waitpid(proc->pid, &wstatus, WNOHANG);
+    if (wait_result < 0 && errno != EAGAIN) {
+        fprintf(stderr, "waitpid() failed\n");
+        proc->test->_status = TESTER_TEST_STATUS_INTERNAL_ERROR;
+        return_value = -1;
+    }
+    else if ((wait_result < 0 && errno == EAGAIN) || wait_result == 0)
+    {
+        return_value = 0;
+    }
+    else {
+        proc->wstatus = wstatus;
+        return_value = proc->pid;
+    }
 
     // read stdout
     ssize_t read_bytes = 0;
@@ -626,22 +642,7 @@ int tester_proc_wait_async_and_read_pipes_async(Tester_proc* proc)
             // TODO: on error set some var to not check that fd later?
         }
     }
-
-    // check if proc have finished
-    int wait_result = waitpid(proc->pid, &wstatus, WNOHANG);
-    if (wait_result < 0 && errno != EAGAIN) {
-        fprintf(stderr, "waitpid() failed\n");
-        proc->test->_status = TESTER_TEST_STATUS_INTERNAL_ERROR;
-        return -1;
-    }
-    else if ((wait_result < 0 && errno == EAGAIN) || wait_result == 0)
-    {
-        return 0;
-    }
-    else {
-        proc->wstatus = wstatus;
-        return proc->pid;
-    }
+    return return_value;
 }
 
 // returns the number of finished procs, which in that case is always 1
