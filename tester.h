@@ -100,15 +100,15 @@ typedef struct {
 typedef struct Tester_proc Tester_proc;
 
 typedef struct {
-    char* name;
-    char** cmd;
-    char** build_cmd;
-    int judge_by;
-    uint8_t expected_exit_code;
-    char* expected_output;
+    char* name;                     // OPTIONAL, name for printing, if NULL, cmd[0] will be used
+    char** cmd;                     // cmd to run test
+    char** build_cmd;               // cmd to build test
+    int judge_by;                   // by which factor decide whether test failed or passed
+    uint8_t expected_exit_code;     // MANDATORY if judge_by & JUDGE_BY_EXIT_CODE
+    char* expected_output;          // MANDATORY if judge_by & JUDGE_BY_OUTPUT
 
-    Tester_test_status _status;
-    Tester_proc* _proc;
+    Tester_test_status _status;     // for internal usage
+    Tester_proc* _proc;             // DONT touch unless you know what you are doing
 } Tester_test;
 
 typedef struct Tester_proc {
@@ -184,12 +184,6 @@ typedef enum {
     TESTER_STATUSES
 #undef ENTRY
 } Test_status;
-
-//typedef Buff Tester_buff;
-////typedef struct Tester_proc Tester_proc;
-//typedef Test Tester_test;
-//typedef Proc Tester_proc;
-//typedef Run_opt Tester_run_opt;
 
 #define Buff Tester_buff
 #define Test Tester_test
@@ -392,7 +386,6 @@ typedef struct {
         } \
     } while (0) \
 
-//#define tester_tests_build(tests, n_tests, ...) tester_procs_run_opt(tests, n_tests, TESTER_TEST_STATUS_BUILD_OK, (Tester_run_opt) {__VA_ARGS__})
 int tester_procs_run_opt(Tester_test* tests, size_t n_tests, Tester_test_status expected_status, Tester_run_opt opt)
 {
     TESTER_ASSERT(tests != NULL);
@@ -452,7 +445,7 @@ int tester_procs_run_opt(Tester_test* tests, size_t n_tests, Tester_test_status 
 
     int failed_cnt = 0;
     for (int i = 0; i < procs_arr.count; i++) {
-        if (procs_arr.items[i]->test->_status == TESTER_TEST_STATUS_ERROR_BUILD) {
+        if (procs_arr.items[i]->test->_status != expected_status) {
             failed_cnt++;
         }
     }
