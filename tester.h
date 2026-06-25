@@ -74,12 +74,12 @@
     ENTRY(TEST_STATUS_CREATED = 0) \
     ENTRY(TEST_STATUS_BUILDING = 1) \
     ENTRY(TEST_STATUS_RUNNING = 2) \
-    ENTRY(TEST_STATUS_ERROR_BUILD = 3) \
-    ENTRY(TEST_STATUS_ERROR_OUTPUT = 4) \
-    ENTRY(TEST_STATUS_ERROR_EXIT_CODE = 8) \
-    ENTRY(TEST_STATUS_BUILD_OK = 16) \
-    ENTRY(TEST_STATUS_FINISHED_OK = 32) \
-    ENTRY(TEST_STATUS_INTERNAL_ERROR = 64) \
+    ENTRY(TEST_STATUS_ERROR_BUILD = 4) \
+    ENTRY(TEST_STATUS_ERROR_OUTPUT = 8) \
+    ENTRY(TEST_STATUS_ERROR_EXIT_CODE = 16) \
+    ENTRY(TEST_STATUS_BUILD_OK = 32) \
+    ENTRY(TEST_STATUS_FINISHED_OK = 64) \
+    ENTRY(TEST_STATUS_INTERNAL_ERROR = 128) \
 
 typedef enum {
 #define ENTRY(x) TESTER_##x,
@@ -467,7 +467,7 @@ void tester_test_eval_result(Tester_test* test)
         //TESTER_ASSERT(proc->buff_stdout.capacity > 0);
 
         // needed because strncmp with 'n' == 0 would always return 0
-        if (test->_proc->buff_stdout.capacity == 0 && strlen(test->expected_output) != 0) {
+        if (test->_proc->buff_stdout.capacity != strlen(test->expected_output)) {
             test->_status |= TESTER_TEST_STATUS_ERROR_OUTPUT;
         }
         else if (strncmp(test->expected_output, test->_proc->buff_stdout.data, test->_proc->buff_stdout.capacity) != 0) {
@@ -475,7 +475,7 @@ void tester_test_eval_result(Tester_test* test)
             //printf("Test '%s' received output: %.*s\n", proc->buff_stdout.data, (int)proc->buff_stdout.capacity);
         }
         else {
-            test->_status = TESTER_TEST_STATUS_FINISHED_OK;
+            test->_status |= TESTER_TEST_STATUS_FINISHED_OK;
         }
     }
 
@@ -488,7 +488,7 @@ void tester_test_eval_result(Tester_test* test)
                 test->_status |= TESTER_TEST_STATUS_ERROR_EXIT_CODE;
             }
             else {
-                test->_status = TESTER_TEST_STATUS_FINISHED_OK;
+                test->_status |= TESTER_TEST_STATUS_FINISHED_OK;
             }
         }
         else {
